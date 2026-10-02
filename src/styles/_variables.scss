@@ -1,0 +1,12 @@
+﻿$night:   #0B0B0F;
+$coal:    #121218;
+$gold:    #C9A24B;
+$grape:   #7B2FF7;
+$magenta: #F107A3;
+$radius-lg: 24px;
+$container: 1200px;
+
+@mixin container {
+  width: min($container, 92%);
+  margin-inline: auto;
+}

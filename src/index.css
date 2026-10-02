@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-night:   #0B0B0F;
+  --color-coal:    #121218;
+  --color-card:    #15151C;
+  --color-gold:    #C9A24B;
+  --color-grape:   #7B2FF7;
+  --color-magenta: #F107A3;
+  --color-mist:    #9CA3AF;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body:    "Inter", sans-serif;
+  --font-code:    "JetBrains Mono", monospace;
+
+  --shadow-glow: 0 0 60px rgba(241, 7, 163, 0.35);
+}
+
+@utility bg-blob {
+  background-image: linear-gradient(135deg, #7B2FF7 0%, #F107A3 100%);
+}

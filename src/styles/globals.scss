@@ -1,0 +1,20 @@
+﻿@use 'variables' as *;
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: $night;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+.container { @include container; }
+
+.section-title {
+  color: $gold;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
