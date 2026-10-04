@@ -8,7 +8,8 @@ import { fallbackProjects } from "../data/fallbackProjects";
 import TechBadge from "../components/projects/TechBadge";
 import ProtectedCodeViewer from "../components/ui/ProtectedCodeViewer";
 
-const STRAPI_URL = import.meta.env.VITE_STRAPI_API_URL || 'https://ragheb-strapi-backend.onrender.com';
+// جلب رابط السيرفر ديناميكياً
+const STRAPI_URL = import.meta.env.VITE_STRAPI_API_URL || import.meta.env.VITE_STRAPI_URL || 'https://ragheb-strapi-backend.onrender.com';
 
 // دالة تحويل رابط الصورة لـ HTTPS واسم النطاق الكامل
 const getImageUrl = (img) => {
@@ -19,10 +20,10 @@ const getImageUrl = (img) => {
   return `${STRAPI_URL.replace(/\/$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
-// دالة استخراج ID فيديو اليوتيوب
+// دالة متطورة لاستخراج ID فيديو اليوتيوب (تدعم روابط الجوال، m.youtube، والـ Shorts)
 const getYouTubeId = (url) => {
   if (!url || typeof url !== 'string') return null;
-  const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
+  const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/)|m\.youtube\.com\/watch\?v=)([\w-]{11})/;
   const match = url.trim().match(regExp);
   return match ? match[1] : null;
 };
@@ -36,12 +37,14 @@ export default function ProjectDetails() {
     const fetchProject = async () => {
       let data = await getProjectBySlug(slug);
 
+      // في حال كان السيرفر نائماً (Cold Start)، نستخدم البيانات المؤقتة
       if (!data) {
         console.warn("Strapi not available, using fallback data for details.");
         data = fallbackProjects.find((p) => p.slug === slug);
       }
 
       if (data) {
+        // معالجة الملاحظات التقنية للووردبريس
         const rawNotes = data.wp_technical_notes;
         let parsedNotes = [];
 
@@ -54,6 +57,7 @@ export default function ProjectDetails() {
             .filter(line => line.length > 0);
         }
 
+        // معالجة أكواد المصدر (Code Snippets)
         let parsedSnippets = data.codeSnippets;
         if (typeof parsedSnippets === 'string' && parsedSnippets.trim() !== '') {
           try {
@@ -139,14 +143,15 @@ export default function ProjectDetails() {
       <div className="grid gap-12 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
           
+          {/* حاوية مشغل الفيديو المُحسنة للجوال */}
           {youtubeId ? (
             <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-white/10 bg-coal shadow-2xl">
               <iframe
-                src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`}
+                src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&enablejsapi=1`}
                 title={project.title}
                 className="absolute inset-0 h-full w-full"
                 frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               ></iframe>
             </div>
@@ -172,6 +177,7 @@ export default function ProjectDetails() {
               {project.description}
             </p>
 
+            {/* الملاحظات التقنية للووردبريس */}
             {project.platform === 'wordpress' && (
               <div className="mt-8 space-y-4">
                 <h3 className="font-display text-2xl font-bold text-white flex items-center gap-2">
@@ -203,6 +209,7 @@ export default function ProjectDetails() {
               </div>
             )}
 
+            {/* عرض الأكواد */}
             {(project.platform !== 'wordpress') && project.codeSnippets?.length > 0 && (
               <div className="mt-8 space-y-4">
                 <h3 className="font-display text-2xl font-bold text-white">
@@ -216,6 +223,7 @@ export default function ProjectDetails() {
             )}
           </div>
 
+          {/* معرض الصور */}
           {project.gallery && project.gallery.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-display text-2xl font-bold text-white">
@@ -240,6 +248,7 @@ export default function ProjectDetails() {
           )}
         </div>
 
+        {/* الشريط الجانبي الأيمن */}
         <div className="space-y-8">
           <div className="rounded-3xl border border-white/5 bg-card p-6">
             <h3 className="mb-4 font-display text-lg font-bold text-white">
