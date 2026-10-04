@@ -40,7 +40,7 @@ export default function AboutMe() {
 
           {/* 3. صورة البروفايل نفسها */}
           <img 
-            src="/public/profile.jpg" /* تأكد من وجود الملف هنا */
+            src="/profile.jpg" /* تأكد من وجود الملف هنا */
             alt="Ragheb Yossof - Multidisciplinary Developer" 
             className="relative z-10 w-[90%] h-[90%] object-cover rounded-full border-4 border-night shadow-2xl ring-1 ring-white/10"
           />

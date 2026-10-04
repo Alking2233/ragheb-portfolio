@@ -1,10 +1,30 @@
 import axios from 'axios';
 
-// قراءة الرابط ديناميكياً من Vercel وإذا لم يجده يقرأ رابط Render الحقيقي مباشرة
-const API_BASE = import.meta.env.VITE_STRAPI_API_URL || import.meta.env.VITE_STRAPI_URL || 'https://ragheb-strapi-backend.onrender.com';
+const RENDER_BACKEND_URL = 'https://ragheb-strapi-backend.onrender.com';
 
-// ضمان أن الرابط ينتهي بـ /api
-const STRAPI_URL = API_BASE.endsWith('/api') ? API_BASE : `${API_BASE.replace(/\/$/, '')}/api`;
+// دالة ذكية لتحديد الرابط الصحيح بنسبة 100%
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_STRAPI_API_URL || import.meta.env.VITE_STRAPI_URL;
+
+  // إذا كنا على سيرفر Vercel (Production)
+  if (import.meta.env.PROD) {
+    // إذا كان المتغير غير موجود أو يحتوي على كلمة localhost، أرفضه واجبره على رابط Render
+    if (!envUrl || envUrl.includes('localhost')) {
+      return `${RENDER_BACKEND_URL}/api`;
+    }
+  }
+
+  // في البيئة المحلية (Local Development)
+  if (!envUrl) {
+    return 'http://localhost:1337/api';
+  }
+
+  return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;
+};
+
+const STRAPI_URL = getBaseUrl();
+
+console.log('📡 Connected Strapi Endpoint:', STRAPI_URL);
 
 const strapi = axios.create({
   baseURL: STRAPI_URL,
@@ -17,7 +37,7 @@ export const getProjects = async () => {
     return response.data.data;
   } catch (error) {
     console.error('Error fetching projects:', error);
-    return null; // نرجع null ليتعرف الفرونت إند على الفشل بسلاسة
+    return null;
   }
 };
 
@@ -36,3 +56,5 @@ export const getProjectBySlug = async (slug) => {
     return null;
   }
 };
+
+export default strapi;
