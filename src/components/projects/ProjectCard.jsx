@@ -10,6 +10,8 @@ import { SiFigma } from 'react-icons/si'
 import TechBadge from './TechBadge'
 import VideoModal from '../ui/VideoModal'
 
+const STRAPI_URL = import.meta.env.VITE_STRAPI_API_URL || 'https://ragheb-strapi-backend.onrender.com';
+
 const icons = {
   bolt: FaBolt, bookOpen: FaBookOpen, school: FaSchool, cloud: FaCloudSun,
   mosque: FaMosque, graduation: FaGraduationCap, building: FaBuilding,
@@ -17,26 +19,43 @@ const icons = {
   news: FaNewspaper, mobile: FaMobileAlt, code: FaCode,
 }
 
+// دالة ذكية وشاملة لاستخراج ID فيديو اليوتيوب
 const getYouTubeId = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
+  const match = url.trim().match(regExp);
+  return match ? match[1] : null;
+};
+
+// دالة بناء رابط الصورة لـ Strapi
+const getImageUrl = (img) => {
+  if (!img) return null;
+  const url = typeof img === 'string' ? img : (img.url || img.attributes?.url);
   if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${STRAPI_URL.replace(/\/$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
 export default function ProjectCard({ project }) {
-  const Icon = icons[project.icon] || FaCode
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const Icon = icons[project.icon] || FaCode;
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const youtubeId = getYouTubeId(project.videoUrl)
-  const thumbnailUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null
+  const youtubeId = getYouTubeId(project.videoUrl);
+  const thumbnailUrl = youtubeId 
+    ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` 
+    : getImageUrl(project.cover || project.image);
+
+  const parsedTech = Array.isArray(project.tech) 
+    ? project.tech 
+    : typeof project.tech === 'string' 
+      ? JSON.parse(project.tech || '[]') 
+      : [];
 
   return (
     <>
       <motion.article
         whileHover={{ y: -8 }}
         transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-        // h-full + w-full + flex flex-col: هذا هو السر لتمدد البطاقة بالكامل
         className="group flex h-full w-full flex-col overflow-hidden rounded-3xl border border-white/5 bg-card"
       >
         <div className="relative grid h-44 shrink-0 place-items-center overflow-hidden bg-coal">
@@ -45,6 +64,7 @@ export default function ProjectCard({ project }) {
               src={thumbnailUrl} 
               alt={project.title} 
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="lazy"
             />
           ) : (
             <>
@@ -72,30 +92,26 @@ export default function ProjectCard({ project }) {
           )}
         </div>
 
-        {/* المحتوى الداخلي: flex-1 يجعله يأخذ كل المساحة المتبقية */}
         <div className="flex flex-1 flex-col space-y-3 p-6">
           <div className="flex items-center justify-between text-xs text-mist">
             <span className="font-semibold text-gold">{project.category}</span>
             <span>{project.year}</span>
           </div>
           
-          {/* min-h-[3.5rem] يحجز مساحة ثابتة للعنوان (سطرين) لتوحيد الارتفاع من الأعلى */}
           <h3 className="font-display text-xl font-bold leading-tight transition-colors group-hover:text-gold line-clamp-2 min-h-3.5rem">
             {project.title}
           </h3>
           
-          {/* flex-1 على الفقرة يدفع كل ما تحتها (الشارات والرابط) للأسفل دائماً */}
           <p className="flex-1 text-sm leading-relaxed text-mist line-clamp-3">
             {project.summary}
           </p>
           
           <div className="flex flex-wrap gap-2 pt-2">
-            {project.tech.map((t) => (
+            {parsedTech.map((t) => (
               <TechBadge key={t}>{t}</TechBadge>
             ))}
           </div>
 
-          {/* mt-auto يدفع الرابط للأسفل بقوة إذا لم يكفِ flex-1 */}
           <Link 
             to={`/projects/${project.slug}`} 
             className="mt-auto inline-block pt-2 text-sm font-semibold text-gold hover:underline"
